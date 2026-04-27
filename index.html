@@ -8,18 +8,8 @@
 body {
   margin: 0;
   font-family: system-ui, sans-serif;
-  transition: 0.3s;
-}
-
-/* THEMES */
-body.dark {
   background: #343541;
   color: #ececf1;
-}
-
-body.light {
-  background: #f5f5f5;
-  color: #111;
 }
 
 /* HEADER */
@@ -27,7 +17,22 @@ header {
   padding: 12px;
   display: flex;
   justify-content: space-between;
-  border-bottom: 1px solid #ccc;
+  border-bottom: 1px solid #444;
+}
+
+/* PROFILE BAR */
+#profileBar {
+  text-align: center;
+  padding: 10px;
+  font-size: 14px;
+  opacity: 0.9;
+}
+
+/* BUTTONS */
+button {
+  padding: 8px 10px;
+  margin: 5px;
+  cursor: pointer;
 }
 
 /* CHAT */
@@ -35,7 +40,7 @@ header {
   max-width: 800px;
   margin: auto;
   padding: 15px;
-  height: 70vh;
+  height: 65vh;
   overflow-y: auto;
 }
 
@@ -44,10 +49,18 @@ header {
   padding: 10px;
   border-radius: 10px;
   max-width: 80%;
+  white-space: pre-wrap;
 }
 
-.user { background: #19c37d; color: black; margin-left: auto; }
-.ai { background: #444654; color: white; }
+.user {
+  background: #19c37d;
+  color: black;
+  margin-left: auto;
+}
+
+.ai {
+  background: #444654;
+}
 
 /* INPUT */
 .inputbar {
@@ -56,38 +69,36 @@ header {
   width: 100%;
   display: flex;
   padding: 10px;
+  background: #202123;
 }
 
 input {
   flex: 1;
   padding: 10px;
-}
-
-/* BUTTONS */
-button {
-  margin-left: 5px;
-  padding: 10px;
+  border: none;
+  outline: none;
 }
 
 /* FOOTER */
 footer {
   text-align: center;
   font-size: 12px;
-  padding: 8px;
-  opacity: 0.6;
+  opacity: 0.5;
+  padding: 6px;
 }
 </style>
 </head>
 
-<body class="dark">
+<body>
 
 <header>
   <div>👶 BabyCare AI</div>
   <div>
-    <button onclick="toggleTheme()">🌙</button>
-    <button onclick="setBabyAge()">👶 Age</button>
+    <button onclick="addBaby()">➕ Baby</button>
   </div>
 </header>
+
+<div id="profileBar">👶 No baby selected</div>
 
 <div class="chat" id="chat"></div>
 
@@ -99,14 +110,45 @@ footer {
 <footer>© BabyCare AI</footer>
 
 <script>
-let babyAge = "unknown";
+let profiles = JSON.parse(localStorage.getItem("profiles")) || {};
+let activeBaby = localStorage.getItem("activeBaby") || null;
 
-// LOAD HISTORY
-let chatHistory = JSON.parse(localStorage.getItem("chat")) || [];
-chatHistory.forEach(m => render(m.text, m.type));
+/* SAVE */
+function saveData() {
+  localStorage.setItem("profiles", JSON.stringify(profiles));
+  localStorage.setItem("activeBaby", activeBaby);
+}
 
-// RENDER MESSAGE
-function render(text, type) {
+/* UPDATE UI */
+function updateProfileUI() {
+  const bar = document.getElementById("profileBar");
+
+  if (!activeBaby || !profiles[activeBaby]) {
+    bar.innerText = "👶 No baby selected";
+    return;
+  }
+
+  bar.innerText =
+    `👶 ${activeBaby} — ${profiles[activeBaby].age} months`;
+}
+
+/* ADD BABY */
+function addBaby() {
+  let name = prompt("Baby name:");
+  if (!name) return;
+
+  let age = prompt("Baby age (months):");
+  if (!age) return;
+
+  profiles[name] = { age };
+  activeBaby = name;
+
+  saveData();
+  updateProfileUI();
+}
+
+/* CHAT RENDER */
+function addMsg(text, type) {
   const div = document.createElement("div");
   div.className = "msg " + type;
   div.innerText = text;
@@ -114,79 +156,65 @@ function render(text, type) {
   div.scrollIntoView();
 }
 
-// SAVE HISTORY
-function save(text, type) {
-  chatHistory.push({ text, type });
-  localStorage.setItem("chat", JSON.stringify(chatHistory));
-}
-
-// THEME TOGGLE
-function toggleTheme() {
-  document.body.classList.toggle("dark");
-  document.body.classList.toggle("light");
-}
-
-// BABY PROFILE
-function setBabyAge() {
-  let age = prompt("Enter baby age in months:");
-  if (age) babyAge = age;
-}
-
-// VOICE OUTPUT
-function speak(text) {
-  let speech = new SpeechSynthesisUtterance(text);
-  speech.rate = 1;
-  speechSynthesis.speak(speech);
-}
-
-// AI RESPONSE (TEMP LOGIC — replace with backend later)
+/* AI LOGIC */
 function aiReply(msg) {
   msg = msg.toLowerCase();
 
-  let reply = "";
+  let age = (activeBaby && profiles[activeBaby])
+    ? profiles[activeBaby].age
+    : "unknown";
+
+  /* AUTO AGE DETECTION */
+  if (msg.includes("cry")) {
+    return `It sounds like your baby may be crying.
+
+Baby age matters — current: ${age} months
+
+Possible reasons:
+• Hunger
+• Sleepiness
+• Discomfort`;
+  }
+
+  if (age === "unknown") {
+    return "👶 Quick question — how old is your baby? Age helps me give better advice.";
+  }
 
   if (msg.includes("sleep")) {
-    reply = `Baby age: ${babyAge} months
+    return `(${age} months)
 
 Sleep Guide:
-- Newborns: 14–17 hrs
-- 6–12 months: 12–15 hrs
-
-Tips:
-• Keep routine
-• White noise helps`;
-  }
-  else if (msg.includes("food")) {
-    reply = `Feeding Guide:
-- 0–6 months: milk only
-- 6+ months: soft foods
-
-Avoid choking hazards.`;
-  }
-  else {
-    reply = `Ask me about sleep, food, or routines for your baby (${babyAge} months).`;
+• Keep routine consistent
+• Avoid stimulation before bed`;
   }
 
-  speak(reply);
-  return reply;
+  if (msg.includes("food")) {
+    return `(${age} months)
+
+Feeding:
+• Adjust food texture by age
+• Avoid choking hazards`;
+  }
+
+  return `Helping your ${age}-month-old baby 👶`;
 }
 
-// SEND MESSAGE
+/* SEND */
 function send() {
   const input = document.getElementById("input");
   const text = input.value;
   if (!text) return;
 
-  render(text, "user");
-  save(text, "user");
+  addMsg(text, "user");
   input.value = "";
 
   setTimeout(() => {
-    let reply = aiReply(text);
-    render(reply, "ai");
-    save(reply, "ai");
-  }, 800);
+    addMsg(aiReply(text), "ai");
+  }, 700);
 }
+
+/* INIT */
+updateProfileUI();
 </script>
 
 </body>
