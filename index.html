@@ -5,6 +5,17 @@
 <title>BabyCare AI</title>
 
 <style>
+  .footer {
+  position: fixed;
+  bottom: 0;
+  width: 100%;
+  text-align: center;
+  font-size: 12px;
+  padding: 8px;
+  background: #202123;
+  color: #aaa;
+  border-top: 1px solid #333;
+}
 body {
   margin: 0;
   font-family: system-ui, sans-serif;
@@ -42,6 +53,7 @@ button {
   padding: 15px;
   height: 65vh;
   overflow-y: auto;
+  padding-bottom: 60px;
 }
 
 .msg {
@@ -216,6 +228,8 @@ function send() {
 /* INIT */
 updateProfileUI();
 </script>
-
+<footer class="footer">
+  © 2026 BabyCare AI. All rights reserved.
+</footer>
 </body>
 </html>
