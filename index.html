@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>BabyCare AI Chat</title>
+
+<style>
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  background: #f4f6f8;
+}
+
+/* Top bar */
+header {
+  background: #10a37f;
+  color: white;
+  padding: 15px;
+  text-align: center;
+  font-size: 18px;
+}
+
+/* Chat container */
+.chat-container {
+  max-width: 800px;
+  margin: auto;
+  padding: 20px;
+  height: calc(100vh - 140px);
+  overflow-y: auto;
+}
+
+/* Messages */
+.message {
+  padding: 12px 15px;
+  border-radius: 10px;
+  margin: 10px 0;
+  max-width: 80%;
+  line-height: 1.4;
+  white-space: pre-wrap;
+}
+
+.user {
+  background: #d1e7ff;
+  margin-left: auto;
+  text-align: right;
+}
+
+.ai {
+  background: #ffffff;
+  border: 1px solid #ddd;
+}
+
+/* Input bar */
+.input-bar {
+  position: fixed;
+  bottom: 0;
+  width: 100%;
+  display: flex;
+  padding: 10px;
+  background: white;
+  border-top: 1px solid #ddd;
+}
+
+input {
+  flex: 1;
+  padding: 12px;
+  font-size: 16px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+}
+
+button {
+  margin-left: 10px;
+  padding: 12px 18px;
+  background: #10a37f;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+button:hover {
+  background: #0e8c6d;
+}
+</style>
+</head>
+
+<body>
+
+<header>👶 BabyCare AI — Parenting Assistant</header>
+
+<div class="chat-container" id="chat"></div>
+
+<div class="input-bar">
+  <input id="input" placeholder="Ask about sleep, food, routines..." />
+  <button onclick="sendMessage()">Send</button>
+</div>
+
+<script>
+function addMessage(text, type) {
+  const div = document.createElement("div");
+  div.className = "message " + type;
+  div.innerText = text;
+  document.getElementById("chat").appendChild(div);
+  div.scrollIntoView();
+}
+
+function getAIResponse(msg) {
+  msg = msg.toLowerCase();
+
+  if (msg.includes("sleep")) {
+    return `🛌 Sleep Guide:
+- Newborns: 14–17 hours/day
+- 2–6 months: 12–16 hours/day
+- 6–12 months: 12–15 hours/day
+
+Tips:
+• Keep bedtime consistent
+• Use white noise
+• Always place baby on their back`;
+  }
+
+  if (msg.includes("food") || msg.includes("feed")) {
+    return `🥣 Feeding Guide:
+- 0–6 months: breastmilk or formula only
+- 6+ months: mashed fruits, veggies, cereals
+
+Avoid:
+• Honey (under 1 year)
+• Whole nuts, grapes (choking risk)`;
+  }
+
+  if (msg.includes("routine") || msg.includes("schedule")) {
+    return `📅 Sample Routine:
+Morning: Feed → Play → Nap
+Afternoon: Feed → Play → Nap
+Evening: Bath → Feed → Sleep
+
+Keep it flexible based on baby cues.`;
+  }
+
+  if (msg.includes("milestone") || msg.includes("develop")) {
+    return `🧠 Development:
+- 0–3 months: eye contact, smiles
+- 3–6 months: rolling, grabbing
+- 6–12 months: sitting, crawling
+
+Try tummy time daily + talking to your baby.`;
+  }
+
+  return `👶 BabyCare AI:
+I can help with sleep, feeding, routines, and development.
+
+Try asking:
+• "How much should my baby sleep?"
+• "What should my 6 month old eat?"
+• "Daily routine for newborn?"`;
+}
+
+function sendMessage() {
+  const input = document.getElementById("input");
+  const text = input.value;
+  if (!text) return;
+
+  addMessage(text, "user");
+  addMessage(getAIResponse(text), "ai");
+
+  input.value = "";
+}
+</script>
+
+</body>
+</html>
