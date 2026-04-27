@@ -8,223 +8,184 @@
 body {
   margin: 0;
   font-family: system-ui, sans-serif;
+  transition: 0.3s;
+}
+
+/* THEMES */
+body.dark {
   background: #343541;
   color: #ececf1;
 }
 
-/* Header */
-header {
-  padding: 15px;
-  text-align: center;
-  border-bottom: 1px solid #444;
-  font-weight: 600;
+body.light {
+  background: #f5f5f5;
+  color: #111;
 }
 
-/* Chat */
-.chat-container {
+/* HEADER */
+header {
+  padding: 12px;
+  display: flex;
+  justify-content: space-between;
+  border-bottom: 1px solid #ccc;
+}
+
+/* CHAT */
+.chat {
   max-width: 800px;
   margin: auto;
-  padding: 20px;
-  padding-bottom: 120px;
+  padding: 15px;
+  height: 70vh;
+  overflow-y: auto;
 }
 
-/* Messages */
-.message {
-  display: flex;
-  margin: 15px 0;
-}
-
-.bubble {
-  padding: 14px;
-  border-radius: 12px;
+.msg {
+  margin: 10px 0;
+  padding: 10px;
+  border-radius: 10px;
   max-width: 80%;
-  line-height: 1.5;
-  white-space: pre-wrap;
 }
 
-/* User */
-.user {
-  justify-content: flex-end;
-}
-.user .bubble {
-  background: #19c37d;
-  color: black;
-}
+.user { background: #19c37d; color: black; margin-left: auto; }
+.ai { background: #444654; color: white; }
 
-/* AI */
-.ai {
-  justify-content: flex-start;
-}
-.ai .bubble {
-  background: #444654;
-}
-
-/* Input */
-.input-bar {
+/* INPUT */
+.inputbar {
   position: fixed;
-  bottom: 40px;
+  bottom: 0;
   width: 100%;
   display: flex;
-  justify-content: center;
-}
-
-.input-box {
-  display: flex;
-  width: 90%;
-  max-width: 800px;
-  background: #40414f;
-  border-radius: 10px;
   padding: 10px;
 }
 
 input {
   flex: 1;
-  background: transparent;
-  border: none;
-  color: white;
-  font-size: 16px;
-  outline: none;
+  padding: 10px;
 }
 
+/* BUTTONS */
 button {
-  background: #19c37d;
-  border: none;
-  padding: 10px 15px;
-  border-radius: 8px;
-  cursor: pointer;
+  margin-left: 5px;
+  padding: 10px;
 }
 
-/* Footer */
-.footer {
-  position: fixed;
-  bottom: 0;
-  width: 100%;
+/* FOOTER */
+footer {
   text-align: center;
   font-size: 12px;
-  color: #aaa;
-  padding: 10px;
-  background: #202123;
-  border-top: 1px solid #333;
-}
-
-/* Typing dots */
-.typing {
-  display: flex;
-  gap: 5px;
-}
-
-.dot {
-  width: 6px;
-  height: 6px;
-  background: #ccc;
-  border-radius: 50%;
-  animation: blink 1.5s infinite;
-}
-
-.dot:nth-child(2) { animation-delay: 0.2s; }
-.dot:nth-child(3) { animation-delay: 0.4s; }
-
-@keyframes blink {
-  0%, 80%, 100% { opacity: 0.2; }
-  40% { opacity: 1; }
+  padding: 8px;
+  opacity: 0.6;
 }
 </style>
 </head>
 
-<body>
+<body class="dark">
 
-<header>👶 BabyCare AI</header>
-
-<div id="chat" class="chat-container"></div>
-
-<div class="input-bar">
-  <div class="input-box">
-    <input id="input" placeholder="Ask about your baby..." />
-    <button onclick="sendMessage()">Send</button>
+<header>
+  <div>👶 BabyCare AI</div>
+  <div>
+    <button onclick="toggleTheme()">🌙</button>
+    <button onclick="setBabyAge()">👶 Age</button>
   </div>
+</header>
+
+<div class="chat" id="chat"></div>
+
+<div class="inputbar">
+  <input id="input" placeholder="Ask about your baby..." />
+  <button onclick="send()">Send</button>
 </div>
 
-<footer class="footer">
-  © 2026 BabyCare AI. All rights reserved.
-</footer>
+<footer>© BabyCare AI</footer>
 
 <script>
-function addMessage(text, type) {
+let babyAge = "unknown";
+
+// LOAD HISTORY
+let chatHistory = JSON.parse(localStorage.getItem("chat")) || [];
+chatHistory.forEach(m => render(m.text, m.type));
+
+// RENDER MESSAGE
+function render(text, type) {
   const div = document.createElement("div");
-  div.className = "message " + type;
-
-  const bubble = document.createElement("div");
-  bubble.className = "bubble";
-  bubble.innerText = text;
-
-  div.appendChild(bubble);
+  div.className = "msg " + type;
+  div.innerText = text;
   document.getElementById("chat").appendChild(div);
   div.scrollIntoView();
 }
 
-function showTyping() {
-  const div = document.createElement("div");
-  div.className = "message ai";
-  div.id = "typing";
-
-  div.innerHTML = `
-    <div class="bubble">
-      <div class="typing">
-        <div class="dot"></div>
-        <div class="dot"></div>
-        <div class="dot"></div>
-      </div>
-    </div>
-  `;
-
-  document.getElementById("chat").appendChild(div);
-  div.scrollIntoView();
+// SAVE HISTORY
+function save(text, type) {
+  chatHistory.push({ text, type });
+  localStorage.setItem("chat", JSON.stringify(chatHistory));
 }
 
-function removeTyping() {
-  const typing = document.getElementById("typing");
-  if (typing) typing.remove();
+// THEME TOGGLE
+function toggleTheme() {
+  document.body.classList.toggle("dark");
+  document.body.classList.toggle("light");
 }
 
-function getAIResponse(msg) {
+// BABY PROFILE
+function setBabyAge() {
+  let age = prompt("Enter baby age in months:");
+  if (age) babyAge = age;
+}
+
+// VOICE OUTPUT
+function speak(text) {
+  let speech = new SpeechSynthesisUtterance(text);
+  speech.rate = 1;
+  speechSynthesis.speak(speech);
+}
+
+// AI RESPONSE (TEMP LOGIC — replace with backend later)
+function aiReply(msg) {
   msg = msg.toLowerCase();
 
+  let reply = "";
+
   if (msg.includes("sleep")) {
-    return `Sleep Guide:
-Newborns: 14–17 hrs
-2–6 months: 12–16 hrs
+    reply = `Baby age: ${babyAge} months
+
+Sleep Guide:
+- Newborns: 14–17 hrs
+- 6–12 months: 12–15 hrs
 
 Tips:
-• consistent bedtime
-• white noise
-• back sleeping`;
+• Keep routine
+• White noise helps`;
+  }
+  else if (msg.includes("food")) {
+    reply = `Feeding Guide:
+- 0–6 months: milk only
+- 6+ months: soft foods
+
+Avoid choking hazards.`;
+  }
+  else {
+    reply = `Ask me about sleep, food, or routines for your baby (${babyAge} months).`;
   }
 
-  if (msg.includes("food") || msg.includes("feed")) {
-    return `Feeding:
-0–6 months: milk only
-6+ months: soft foods
-
-Avoid honey + choking hazards`;
-  }
-
-  return `I can help with sleep, feeding, routines, and development. Try asking a specific question!`;
+  speak(reply);
+  return reply;
 }
 
-function sendMessage() {
+// SEND MESSAGE
+function send() {
   const input = document.getElementById("input");
   const text = input.value;
   if (!text) return;
 
-  addMessage(text, "user");
+  render(text, "user");
+  save(text, "user");
   input.value = "";
 
-  showTyping();
-
   setTimeout(() => {
-    removeTyping();
-    addMessage(getAIResponse(text), "ai");
-  }, 1000);
+    let reply = aiReply(text);
+    render(reply, "ai");
+    save(reply, "ai");
+  }, 800);
 }
 </script>
 
