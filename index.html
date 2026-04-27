@@ -2,146 +2,219 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>BabyNest AI</title>
+<title>BabyCare AI</title>
 
 <style>
-  .footer {
-  position: fixed;
-  bottom: 0;
-  width: 100%;
-  text-align: center;
-  font-size: 12px;
-  padding: 8px;
-  background: #202123;
-  color: #aaa;
-  border-top: 1px solid #333;
-}
 body {
   margin: 0;
   font-family: system-ui, sans-serif;
   background: #343541;
   color: #ececf1;
+  display: flex;
+  height: 100vh;
 }
 
-/* HEADER */
+/* SIDEBAR */
+.sidebar {
+  width: 260px;
+  background: #202123;
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+}
+
+.baby {
+  padding: 8px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+.baby:hover { background: #2a2b32; }
+.active { background: #444654; }
+
+/* MAIN */
+.main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
 header {
   padding: 12px;
-  display: flex;
-  justify-content: space-between;
   border-bottom: 1px solid #444;
-}
-
-/* PROFILE BAR */
-#profileBar {
   text-align: center;
-  padding: 10px;
-  font-size: 14px;
-  opacity: 0.9;
-}
-
-/* BUTTONS */
-button {
-  padding: 8px 10px;
-  margin: 5px;
-  cursor: pointer;
 }
 
 /* CHAT */
 .chat {
+  flex: 1;
+  overflow-y: auto;
+  padding: 20px;
   max-width: 800px;
   margin: auto;
-  padding: 15px;
-  height: 65vh;
-  overflow-y: auto;
-  padding-bottom: 60px;
+  width: 100%;
 }
 
-.msg {
+.message {
+  display: flex;
   margin: 10px 0;
-  padding: 10px;
+}
+
+.user { justify-content: flex-end; }
+.ai { justify-content: flex-start; }
+
+.bubble {
+  padding: 12px;
   border-radius: 10px;
-  max-width: 80%;
+  max-width: 70%;
   white-space: pre-wrap;
 }
 
-.user {
+.user .bubble {
   background: #19c37d;
   color: black;
-  margin-left: auto;
 }
-
-.ai {
+.ai .bubble {
   background: #444654;
 }
 
 /* INPUT */
-.inputbar {
-  position: fixed;
-  bottom: 0;
-  width: 100%;
-  display: flex;
+.input-bar {
   padding: 10px;
-  background: #202123;
+  border-top: 1px solid #444;
+  display: flex;
 }
 
 input {
   flex: 1;
   padding: 10px;
+  background: #40414f;
   border: none;
-  outline: none;
+  color: white;
 }
 
-/* FOOTER */
-footer {
-  text-align: center;
-  font-size: 12px;
-  opacity: 0.5;
-  padding: 6px;
+button {
+  margin-left: 10px;
+  padding: 10px;
+  background: #19c37d;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+/* TYPING */
+.typing {
+  display: flex;
+  gap: 5px;
+}
+.dot {
+  width: 6px;
+  height: 6px;
+  background: #ccc;
+  border-radius: 50%;
+  animation: blink 1.5s infinite;
+}
+.dot:nth-child(2) { animation-delay: .2s; }
+.dot:nth-child(3) { animation-delay: .4s; }
+
+@keyframes blink {
+  0%, 80%, 100% { opacity: 0.2; }
+  40% { opacity: 1; }
+}
+
+/* LOGIN */
+.login {
+  position: fixed;
+  inset: 0;
+  background: #000000cc;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.login-box {
+  background: #202123;
+  padding: 20px;
+  border-radius: 10px;
 }
 </style>
 </head>
 
 <body>
 
-<header>
-  <div>👶 BabyNest AI</div>
-  <div>
-    <button onclick="addBaby()">➕ Baby</button>
+<!-- LOGIN -->
+<div id="loginScreen" class="login">
+  <div class="login-box">
+    <h3>Login</h3>
+    <input id="username" placeholder="Enter name" />
+    <button onclick="login()">Enter</button>
   </div>
-</header>
-
-<div id="profileBar">👶 No baby selected</div>
-
-<div class="chat" id="chat"></div>
-
-<div class="inputbar">
-  <input id="input" placeholder="Ask about your baby..." />
-  <button onclick="send()">Send</button>
 </div>
 
-<footer>© BabyNest AI</footer>
+<!-- SIDEBAR -->
+<div class="sidebar">
+  <h3 id="userDisplay"></h3>
+  <div id="babyList"></div>
+  <button onclick="addBaby()">➕ Add Baby</button>
+</div>
+
+<!-- MAIN -->
+<div class="main">
+<header id="headerTitle">BabyCare AI</header>
+<div id="chat" class="chat"></div>
+
+<div class="input-bar">
+  <input id="input" placeholder="Message..." />
+  <button onclick="send()">Send</button>
+</div>
+</div>
 
 <script>
+let user = localStorage.getItem("user");
 let profiles = JSON.parse(localStorage.getItem("profiles")) || {};
-let activeBaby = localStorage.getItem("activeBaby") || null;
+let activeBaby = localStorage.getItem("activeBaby");
+
+/* LOGIN */
+function login() {
+  user = document.getElementById("username").value;
+  if (!user) return;
+
+  localStorage.setItem("user", user);
+  document.getElementById("loginScreen").style.display = "none";
+  document.getElementById("userDisplay").innerText = "👤 " + user;
+}
+
+/* AUTO LOGIN */
+if (user) {
+  document.getElementById("loginScreen").style.display = "none";
+  document.getElementById("userDisplay").innerText = "👤 " + user;
+}
 
 /* SAVE */
-function saveData() {
+function save() {
   localStorage.setItem("profiles", JSON.stringify(profiles));
   localStorage.setItem("activeBaby", activeBaby);
 }
 
-/* UPDATE UI */
-function updateProfileUI() {
-  const bar = document.getElementById("profileBar");
+/* BABIES */
+function renderBabies() {
+  const list = document.getElementById("babyList");
+  list.innerHTML = "";
 
-  if (!activeBaby || !profiles[activeBaby]) {
-    bar.innerText = "👶 No baby selected";
-    return;
+  for (let name in profiles) {
+    const div = document.createElement("div");
+    div.className = "baby" + (name === activeBaby ? " active" : "");
+    div.innerText = `${name} (${profiles[name].age}m)`;
+
+    div.onclick = () => {
+      activeBaby = name;
+      save();
+      loadChat();
+      renderBabies();
+      updateHeader();
+    };
+
+    list.appendChild(div);
   }
-
-  bar.innerText =
-    `👶 ${activeBaby} — ${profiles[activeBaby].age} months`;
 }
 
 /* ADD BABY */
@@ -149,63 +222,94 @@ function addBaby() {
   let name = prompt("Baby name:");
   if (!name) return;
 
-  let age = prompt("Baby age (months):");
+  let age = prompt("Age (months):");
   if (!age) return;
 
-  profiles[name] = { age };
+  profiles[name] = { age, chat: [] };
   activeBaby = name;
 
-  saveData();
-  updateProfileUI();
+  save();
+  renderBabies();
+  updateHeader();
 }
 
-/* CHAT RENDER */
+/* HEADER */
+function updateHeader() {
+  if (!activeBaby) return;
+
+  document.getElementById("headerTitle").innerText =
+    `${activeBaby} — ${profiles[activeBaby].age} months`;
+}
+
+/* CHAT SAVE */
+function saveMessage(text, type) {
+  profiles[activeBaby].chat.push({ text, type });
+  save();
+}
+
+/* LOAD CHAT */
+function loadChat() {
+  const chat = document.getElementById("chat");
+  chat.innerHTML = "";
+
+  if (!profiles[activeBaby].chat) return;
+
+  profiles[activeBaby].chat.forEach(m => addMsg(m.text, m.type));
+}
+
+/* MESSAGE */
 function addMsg(text, type) {
   const div = document.createElement("div");
-  div.className = "msg " + type;
-  div.innerText = text;
+  div.className = "message " + type;
+
+  const bubble = document.createElement("div");
+  bubble.className = "bubble";
+  bubble.innerText = text;
+
+  div.appendChild(bubble);
   document.getElementById("chat").appendChild(div);
   div.scrollIntoView();
 }
 
-/* AI LOGIC */
+/* TYPING */
+function showTyping() {
+  const div = document.createElement("div");
+  div.className = "message ai";
+  div.id = "typing";
+
+  div.innerHTML = `
+    <div class="bubble">
+      <div class="typing">
+        <div class="dot"></div>
+        <div class="dot"></div>
+        <div class="dot"></div>
+      </div>
+    </div>
+  `;
+
+  document.getElementById("chat").appendChild(div);
+}
+
+function removeTyping() {
+  const t = document.getElementById("typing");
+  if (t) t.remove();
+}
+
+/* AI */
 function aiReply(msg) {
-  msg = msg.toLowerCase();
+  let age = profiles[activeBaby]?.age || "unknown";
 
-  let age = (activeBaby && profiles[activeBaby])
-    ? profiles[activeBaby].age
-    : "unknown";
-
-  /* AUTO AGE DETECTION */
   if (msg.includes("cry")) {
-    return `It sounds like your baby may be crying.
+    return `Your baby may be crying.
 
-Baby age matters — current: ${age} months
-
-Possible reasons:
-• Hunger
-• Sleepiness
-• Discomfort`;
+Age: ${age} months
+• Check hunger
+• Check sleep
+• Check diaper`;
   }
 
   if (age === "unknown") {
-    return "👶 Quick question — how old is your baby? Age helps me give better advice.";
-  }
-
-  if (msg.includes("sleep")) {
-    return `(${age} months)
-
-Sleep Guide:
-• Keep routine consistent
-• Avoid stimulation before bed`;
-  }
-
-  if (msg.includes("food")) {
-    return `(${age} months)
-
-Feeding:
-• Adjust food texture by age
-• Avoid choking hazards`;
+    return "How old is your baby?";
   }
 
   return `Helping your ${age}-month-old baby 👶`;
@@ -215,21 +319,28 @@ Feeding:
 function send() {
   const input = document.getElementById("input");
   const text = input.value;
-  if (!text) return;
+  if (!text || !activeBaby) return;
 
   addMsg(text, "user");
+  saveMessage(text, "user");
   input.value = "";
 
+  showTyping();
+
   setTimeout(() => {
-    addMsg(aiReply(text), "ai");
-  }, 700);
+    removeTyping();
+    const reply = aiReply(text);
+    addMsg(reply, "ai");
+    saveMessage(reply, "ai");
+  }, 800);
 }
 
 /* INIT */
-updateProfileUI();
+renderBabies();
+updateHeader();
+if (activeBaby) loadChat();
 </script>
-<footer class="footer">
-  © 2026 BabyNest AI. All rights reserved.
-</footer>
+
 </body>
+</html>
 </html>
