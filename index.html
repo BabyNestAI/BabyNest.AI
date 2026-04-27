@@ -5,6 +5,18 @@
 <title>BabyCare AI Chat</title>
 
 <style>
+  .footer {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  background: white;
+  border-top: 1px solid #ddd;
+  text-align: center;
+  padding: 12px;
+  font-size: 13px;
+  color: #777;
+}
 body {
   margin: 0;
   font-family: Arial, sans-serif;
@@ -27,6 +39,13 @@ header {
   padding: 20px;
   height: calc(100vh - 140px);
   overflow-y: auto;
+  .chat-container {
+  max-width: 800px;
+  margin: auto;
+  padding: 20px;
+  height: calc(100vh - 140px);
+  overflow-y: auto;
+  padding-bottom: 70px;
 }
 
 /* Messages */
@@ -168,6 +187,8 @@ function sendMessage() {
   input.value = "";
 }
 </script>
-
+<footer class="footer">
+  © 2026 BabyCare AI. All rights reserved.
+</footer>
 </body>
 </html>
