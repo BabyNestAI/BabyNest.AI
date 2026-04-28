@@ -10,6 +10,10 @@ body {
   font-family: system-ui, sans-serif;
   background: #343541;
   color: #ececf1;
+}
+
+/* APP LAYOUT */
+.app {
   display: flex;
   height: 100vh;
 }
@@ -38,6 +42,7 @@ body {
   flex-direction: column;
 }
 
+/* HEADER */
 header {
   padding: 12px;
   border-bottom: 1px solid #444;
@@ -54,6 +59,7 @@ header {
   width: 100%;
 }
 
+/* MESSAGES */
 .message {
   display: flex;
   margin: 10px 0;
@@ -73,6 +79,7 @@ header {
   background: #19c37d;
   color: black;
 }
+
 .ai .bubble {
   background: #444654;
 }
@@ -99,6 +106,16 @@ button {
   border: none;
   border-radius: 6px;
   cursor: pointer;
+}
+
+/* FOOTER */
+.footer {
+  text-align: center;
+  font-size: 12px;
+  padding: 10px;
+  background: #202123;
+  color: #aaa;
+  border-top: 1px solid #333;
 }
 
 /* TYPING */
@@ -150,22 +167,33 @@ button {
   </div>
 </div>
 
-<!-- SIDEBAR -->
-<div class="sidebar">
-  <h3 id="userDisplay"></h3>
-  <div id="babyList"></div>
-  <button onclick="addBaby()">➕ Add Baby</button>
-</div>
+<div class="app">
 
-<!-- MAIN -->
-<div class="main">
-<header id="headerTitle">BabyCare AI</header>
-<div id="chat" class="chat"></div>
+  <!-- SIDEBAR -->
+  <div class="sidebar">
+    <h3 id="userDisplay"></h3>
+    <div id="babyList"></div>
+    <button onclick="addBaby()">➕ Add Baby</button>
+  </div>
 
-<div class="input-bar">
-  <input id="input" placeholder="Message..." />
-  <button onclick="send()">Send</button>
-</div>
+  <!-- MAIN -->
+  <div class="main">
+
+    <header id="headerTitle">BabyCare AI</header>
+
+    <div id="chat" class="chat"></div>
+
+    <div class="input-bar">
+      <input id="input" placeholder="Message..." />
+      <button onclick="send()">Send</button>
+    </div>
+
+    <footer class="footer">
+      © 2026 BabyCare AI. All rights reserved.
+    </footer>
+
+  </div>
+
 </div>
 
 <script>
@@ -235,7 +263,10 @@ function addBaby() {
 
 /* HEADER */
 function updateHeader() {
-  if (!activeBaby) return;
+  if (!activeBaby) {
+    document.getElementById("headerTitle").innerText = "BabyCare AI";
+    return;
+  }
 
   document.getElementById("headerTitle").innerText =
     `${activeBaby} — ${profiles[activeBaby].age} months`;
@@ -252,7 +283,7 @@ function loadChat() {
   const chat = document.getElementById("chat");
   chat.innerHTML = "";
 
-  if (!profiles[activeBaby].chat) return;
+  if (!profiles[activeBaby]?.chat) return;
 
   profiles[activeBaby].chat.forEach(m => addMsg(m.text, m.type));
 }
@@ -297,19 +328,37 @@ function removeTyping() {
 
 /* AI */
 function aiReply(msg) {
+  msg = msg.toLowerCase();
+
   let age = profiles[activeBaby]?.age || "unknown";
 
   if (msg.includes("cry")) {
     return `Your baby may be crying.
 
 Age: ${age} months
-• Check hunger
-• Check sleep
-• Check diaper`;
+• Hunger
+• Sleepiness
+• Diaper issue`;
+  }
+
+  if (msg.includes("sleep")) {
+    return `(${age} months)
+
+Sleep tips:
+• Consistent routine
+• Calm environment`;
+  }
+
+  if (msg.includes("food") || msg.includes("eat")) {
+    return `(${age} months)
+
+Feeding tips:
+• Age-appropriate foods
+• Avoid choking hazards`;
   }
 
   if (age === "unknown") {
-    return "How old is your baby?";
+    return "👶 Add a baby to get better advice.";
   }
 
   return `Helping your ${age}-month-old baby 👶`;
@@ -319,11 +368,17 @@ Age: ${age} months
 function send() {
   const input = document.getElementById("input");
   const text = input.value;
-  if (!text || !activeBaby) return;
+  if (!text) return;
 
   addMsg(text, "user");
-  saveMessage(text, "user");
   input.value = "";
+
+  if (!activeBaby) {
+    addMsg("👶 Please add a baby first using the sidebar.", "ai");
+    return;
+  }
+
+  saveMessage(text, "user");
 
   showTyping();
 
@@ -340,9 +395,6 @@ renderBabies();
 updateHeader();
 if (activeBaby) loadChat();
 </script>
-<footer class="footer">
-  © 2026 BabyCare AI. All rights reserved.
-</footer>
+
 </body>
-</html>
 </html>
